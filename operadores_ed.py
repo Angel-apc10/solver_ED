@@ -12,12 +12,12 @@ eq_normal = sympy.Eq(y.diff(x), 4*x) # Ecuación: y' = 4x (lineal de primer orde
 sol_normal = sympy.dsolve(eq_normal, y)
 print("Solución Normal:", sol_normal)
 
-def resolver_edo():
-    eq_input = input("Ingrese la ecuación diferencial (ejemplo: y' + 2*y = exp(x)): ")
+def resolver_edo(eq_input):
+    #eq_input = input("Ingrese la ecuación diferencial (ejemplo: y' + 2*y = exp(x)): ")
     sol_normal = sympy.dsolve(interpretar_edo(eq_input), y)
     print("Solución:", sol_normal)
+    return sol_normal
     
-
 def interpretar_edo(eq_input):
     extract = eq_input.split("=")
     derivada_str = extract[0].strip()
@@ -25,8 +25,12 @@ def interpretar_edo(eq_input):
     expresion_str = extract[1].strip()
     return sympy.Eq(eval(derivada_str), eval(expresion_str))
     
-resolver_edo()
-    
+def obtener_propiedades_edo(eq_input):
+    eq = interpretar_edo(eq_input)
+    orden = sympy.ode_order(eq, y)
+    es_lineal = sympy.checkodesol(eq, sympy.dsolve(eq, y))
+    return orden, es_lineal
+
 # Para obtener propiedades de la ecuación diferencial como orden, linealidad:
 #orden = sympy.ode_order(eq_homogenea, y)
 
