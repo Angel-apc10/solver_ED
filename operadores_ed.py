@@ -1,17 +1,50 @@
 import sympy
+from sympy.parsing.sympy_parser import (
+    parse_expr, standard_transformations, implicit_multiplication_application,
+    convert_xor, function_exponentiation
+)
 
 # Definimos las variables y la función
 x = sympy.symbols('x')
 y = sympy.Function('y')(x)
 
-# Ecuación "Normal" (Lineal de primer orden) ---
-# Ecuación: y' + 2y = e^x
-#eq_normal = sympy.Eq(y.diff(x) + 2*y, sympy.exp(x))
+TRANSFORMACIONES = (
+    standard_transformations +
+    (implicit_multiplication_application, convert_xor, function_exponentiation)
+)
 
-eq_normal = sympy.Eq(y.diff(x), 4*x) # Ecuación: y' = 4x (lineal de primer orden)
-sol_normal = sympy.dsolve(eq_normal, y)
-print("Solución Normal:", sol_normal)
+#Diccionario de nombres permitidos para evaluar y recibir entradas seguras
+nombres_Permitidos = {
+    'x': x,
+    'y': y,
+    
+    #FUnciones exponenciales
+    'exp': sympy.exp,
+    'log': sympy.log,
+    'ln': sympy.log,
+    'sqrt': sympy.sqrt,
+    
+    #Funciones trigonométricas
+    'sin': sympy.sin,
+    'cos': sympy.cos,
+    'tan': sympy.tan,
+    'sec': sympy.sec,
+    'csc': sympy.csc,   
+    'cot': sympy.cot,
+    
+    #Constantes
+    'pi': sympy.pi,
+    'e': sympy.E
+}
 
+def convertir_expresion(texto:str):
+    texto = texto.strip()
+    
+    return parse_expr(texto, 
+                      transformations=TRANSFORMACIONES, 
+                      local_dict=nombres_Permitidos,
+                      evaluate=True)
+    
 def resolver_edo(eq_input):
     #eq_input = input("Ingrese la ecuación diferencial (ejemplo: y' + 2*y = exp(x)): ")
     sol_normal = sympy.dsolve(interpretar_edo(eq_input), y)
@@ -20,11 +53,17 @@ def resolver_edo(eq_input):
     return sol_normal
     
 def interpretar_edo(eq_input):
-    extract = eq_input.split("=")
-    derivada_str = extract[0].strip()
-    derivada_str = derivada_str.replace("y'", "y.diff(x)")
-    expresion_str = extract[1].strip()
-    return sympy.Eq(eval(derivada_str), eval(expresion_str))
+    lado_izq, lado_der = eq_input.split("=")
+
+    lado_izq = lado_izq.strip()
+    lado_der = lado_der.strip()
+
+    lado_izq = lado_izq.replace("y'", "y.diff(x)")
+
+    expr_izq = convertir_expresion(lado_izq)
+    expr_der = convertir_expresion(lado_der)
+
+    return sympy.Eq(expr_izq, expr_der)
     
 def obtener_propiedades_edo(eq_input):
     eq = interpretar_edo(eq_input)
@@ -38,9 +77,3 @@ def obtener_propiedades_edo(eq_input):
         print("La ecuación es lineal.")
         
     return orden, es_lineal
-
-#resolver_edo("y' = 5*x")
-# Para obtener propiedades de la ecuación diferencial como orden, linealidad:
-#orden = sympy.ode_order(eq_homogenea, y)
-
-#es_lineal = sympy.checkodesol(eq_homogenea, sol_homogenea) # (Simplificación conceptual)
