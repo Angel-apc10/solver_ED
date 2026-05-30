@@ -1,0 +1,9 @@
+# Ignorar carpetas de compilación de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Opcional: Ignorar entornos virtuales si creaste uno en la carpeta del proyecto
+venv/
+env/

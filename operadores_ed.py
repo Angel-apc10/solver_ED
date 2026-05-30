@@ -39,24 +39,58 @@ nombres_Permitidos = {
 
 def convertir_expresion(texto:str):
     texto = texto.strip()
-    
     return parse_expr(texto, 
                       transformations=TRANSFORMACIONES, 
                       local_dict=nombres_Permitidos,
                       evaluate=True)
     
-def resolver_edo(eq_input):
-    #eq_input = input("Ingrese la ecuación diferencial (ejemplo: y' + 2*y = exp(x)): ")
-    sol_normal = sympy.dsolve(interpretar_edo(eq_input), y)
-    #print("Solución general de la ecuación diferencial: ", sol_normal)
-    #print("y = ", sol_normal.rhs)
-    return sol_normal
+def resolver_edo(eq_input, x0_val= None, y0_val = None):
+    '''Función unificada que ahora puede resolver una EDO general o particular
+    con (PVI) si se le proporciona un valor a la condicion a x0 o a y0
+    '''
+    try: 
+        # 1. Interpretamos la ecuación
+        eq = interpretar_edo(eq_input)
+        # 2. Obtenemos las propiedades mediante clasificación y orden de SymPy
+        orden = sympy.ode_order(eq, y)
+        clasificaciones = sympy.classify_ode(eq, y)
+        
+        # Analizamos las clasificaciones para determinar linealidad y homogeneidad
+        es_lineal = any("linear" in c for c in clasificaciones)
+        es_homogenea = any("homogeneous" in c for c in clasificaciones)
+        
+        #Establecemos la lógica para resolver las condiciones iniciales
+        #Si se reciben ambos valores, se configura el diccionario 'ics' de Sympy
+        condiciones_iniciales = None
+        if x0_val is not None and y0_val is not None:
+            condiciones_iniciales = {y.subs(x, x0_val): y0_val}
+        # 3. Resolvemos la ecuación
+        solucion = sympy.dsolve(eq, y, ics = condiciones_iniciales)
+        
+        # 4. Retornamos todo empaquetado
+        return {
+            "status": "success",
+            "orden": orden,
+            "lineal": "Sí" if es_lineal else "No",
+            "homogenea": "Sí" if es_homogenea else "No",
+            "solucion": solucion # Objeto SymPy original listo para pasarse a LaTeX
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "mensaje": str(e)
+        }
     
+        
 def interpretar_edo(eq_input):
+    #Se valida que tenga un signo gual para evitar errores en el split
+    if "=" not in eq_input:
+        eq_input = f"{eq_input} = 0"
+        
     lado_izq, lado_der = eq_input.split("=")
 
-    lado_izq = lado_izq.strip()
-    lado_der = lado_der.strip()
+    lado_izq = lado_izq.strip().replace("y'", "y.diff(x)")
+    lado_der = lado_der.strip().replace("y'", "y.diff(x)")
 
     lado_izq = lado_izq.replace("y'", "y.diff(x)")
 
