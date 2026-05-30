@@ -19,7 +19,7 @@ con soporte para ecuaciones homogéneas y Problemas de Valor inicial (PVI)
 # Instalación
 Para correr el simulador de manera local, siga las siguientes instrucciones:
 1. Clone este repositorio:
-   '''bash
+   ´´´bash
    git clone [https://github.com/tu-usuario/tu-repositorio.git](https://github.com/tu-usuario/tu-repositorio.git)
 2. Instale las dependencias necesarias para su ejecución:
    pip install sympy numpy matplotlib ttkbootstrap
